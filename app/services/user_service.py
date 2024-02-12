@@ -11,7 +11,19 @@ def generate_api_key():
     api_key = hashlib.sha256(random_bytes).hexdigest()  # Hash using SHA-256
     return api_key
 
-def create_user(emp_id, name, email, position, password, manager_emp_id):
+def validateEmail(email):
+    user = User.query.filter(email == email).first()
+    if user:
+        return False
+    return True
+        
+def validateMobile(mobile):
+    user = User.query.filter(mobile == mobile).first()
+    if user:
+        return False
+    return True
+
+def create_user(emp_id, name, email, position, mobile, password, manager_emp_id):
     status = 1
     if emp_id == manager_emp_id:
         status = 0
@@ -24,18 +36,19 @@ def create_user(emp_id, name, email, position, password, manager_emp_id):
         password = password,
         name = name,
         position = position,
+        mobile = mobile,
         manager_emp_id = manager_emp_id,
         status = status,
         api_key = generate_api_key()
         )
+    
     db.session.add(user)
     db.session.commit()
-    return user
+
+    return user.api_key
 
 
 def getEmpID(email, password):
-    print(email)
-    print(password)
     user = User.query.filter_by(email=email, password=password, status=0).first()
     if user:
         return user.api_key
@@ -73,7 +86,7 @@ def approveUserByManager(api_key, emp_id):
     else:
         return False
 
-def editUserByManager(api_key, emp_id, new_name, new_email, new_position, new_manager_emp_id):
+def editUserByManager(api_key, emp_id, new_name, new_email, new_position, new_mobile, new_manager_emp_id):
     manager = User.query.filter_by(api_key=api_key).first()
     user = User.query.filter_by(emp_id=emp_id).first()
 
@@ -84,6 +97,7 @@ def editUserByManager(api_key, emp_id, new_name, new_email, new_position, new_ma
         user.name = new_name
         user.email = new_email
         user.position = new_position
+        user.mobile = new_mobile
         user.updated_at = datetime.utcnow()
         user.manager_emp_id = new_manager_emp_id
 

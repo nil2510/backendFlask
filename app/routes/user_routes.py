@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
-from app.services.user_service import approveUserByManager, changePassword, create_user, deleteUserByManager, editUserByManager, getEmpID, getUnapprrovedUsersByManager, getUser, getUsersByManager
+from app.services.user_service import approveUserByManager, changePassword, create_user, deleteUserByManager, editUserByManager, getEmpID, getUnapprrovedUsersByManager, getUser, getUsersByManager, validateEmail, validateMobile
 
 bp = Blueprint('user_routes', __name__)
 
@@ -9,7 +9,7 @@ bp = Blueprint('user_routes', __name__)
 def register():
     data = request.get_json()
 
-    if 'emp_id' not in data or 'name' not in data or 'email' not in data or 'position' not in data or 'password' not in data or 'manager_emp_id' not in data:
+    if 'emp_id' not in data or 'name' not in data or 'email' not in data or 'position' not in data or 'mobile' not in data or 'password' not in data or 'manager_emp_id' not in data:
         return jsonify({'error': 'incomplete data'}), 400
     
     emp_id = data['emp_id']
@@ -17,11 +17,20 @@ def register():
     password = data['password']
     name = data['name']
     position = data['position']
+    mobile = data['mobile']
     manager_emp_id = data['manager_emp_id']
 
-    user = create_user(emp_id, name, email, position, password, manager_emp_id)
+    success = validateEmail(email)
+    if success:
+        return jsonify({'error': 'email is already registered'}), 200
+    
+    success = validateMobile(mobile)
+    if success:
+        return jsonify({'error': 'mobile is already registered'}), 200
 
-    return jsonify({'message': 'User registered successfully', 'api_key': user.api_key}), 201
+    api_key = create_user(emp_id, name, email, position, mobile, password, manager_emp_id)
+
+    return jsonify({'message': 'User registered successfully', 'api_key': api_key}), 201
 
 @bp.route('/login-user', methods=['POST'])
 @cross_origin()
@@ -55,6 +64,7 @@ def handlerGetUser():
             'name': user.name,
             'email': user.email,
             'position': user.position,
+            'number': user.number,
             'manager_emp_id': user.manager_emp_id
         }
         return jsonify(user_details)
@@ -77,7 +87,9 @@ def handlerGetUsersByManager():
                 'emp_id': user.emp_id,
                 'name': user.name,
                 'email': user.email,
-                'position': user.position
+                'position': user.position,
+                'number': user.number
+
             }
             user_details_list.append(user_details)
 
@@ -102,7 +114,9 @@ def handlerGetPendingUsersByManager():
                 'emp_id': user.emp_id,
                 'name': user.name,
                 'email': user.email,
-                'position': user.position
+                'position': user.position,
+                'number': user.number
+
             }
             pending_users_list.append(user_details)
 
@@ -137,12 +151,13 @@ def handlerEditUserByManager():
     new_name = data.get('new_name')
     new_email = data.get('new_email')
     new_position = data.get('new_position')
+    new_mobile = data.get('new_mobile')
     new_manager_emp_id = data.get('new_manager_emp_id')
 
     if emp_id is None:
         return jsonify({'error': 'emp_id is required'}), 400
 
-    success = editUserByManager(api_key, emp_id, new_name, new_email, new_position, new_manager_emp_id)
+    success = editUserByManager(api_key, emp_id, new_name, new_email, new_position, new_mobile, new_manager_emp_id)
 
     if success:
         return jsonify({'message': 'User edited successfully'}), 200
