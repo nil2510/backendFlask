@@ -7,9 +7,8 @@ from app import db
 
 def createRequest(api_key, date_from, date_to, request_type):
     user = User.query.filter_by(api_key=api_key, status=0).first()
-    
     status = 1
-    if user.emp_id == user.manager_emp_id:
+    if user.user_type == "admin":
         status = 0
     if user:
         request = Request(
@@ -28,39 +27,38 @@ def createRequest(api_key, date_from, date_to, request_type):
     else:
         return False
 
-def getRequests(api_key):
-    user_emp_id = User.query.filter_by(api_key=api_key).with_entities(User.emp_id).first()
-    if user_emp_id:
-        user_emp_id = user_emp_id[0]
-        requests = Request.query.filter_by(user_emp_id=user_emp_id).all()
-        return requests
-    return []
+def getRequest(emp_id, id):
+    requests = Request.query.filter_by(id =id, user_emp_id=emp_id).first()
+    return requests
+
+def getRequests(emp_id):
+    requests = Request.query.filter_by(user_emp_id=emp_id).all()
+    return requests
     
-def getRequestsByManager(api_key):
-    manager_emp_id = User.query.filter_by(api_key=api_key).with_entities(User.emp_id).first()
-    if manager_emp_id:
-        manager_emp_id = manager_emp_id[0]
-        user_emp_ids = User.query.filter_by(manager_emp_id=manager_emp_id, status=0).with_entities(User.emp_id).all()
-        if user_emp_ids:
-            user_emp_ids = [emp_id[0] for emp_id in user_emp_ids]
-            requests = Request.query.filter(Request.user_emp_id.in_(user_emp_ids), Request.status == 1).all()
-            return requests
-    return []
+def getRequestByAdmin(id):
+    requests = Request.query.filter_by(id= id, status=1).first()
+    return requests
 
+def getRequestsByAdmin():
+    requests = Request.query.filter_by(status=1).all()
+    return requests
 
-def approveRequestByManager(api_key, request_id):
-    manager_emp_id = User.query.filter_by(api_key=api_key).with_entities(User.emp_id).first()
+def editRequest(user_emp_id, id, new_date_from, new_date_to, new_request_type):
+    request = Request.query.filter_by(id=id, user_emp_id=user_emp_id).first()
+    if request:
+        request.date_from = new_date_from
+        request.date_to = new_date_to
+        request.request_type = new_request_type
+        db.session.commit()
+        return True
+    else:
+        return False
 
-    if manager_emp_id:
-        manager_emp_id = manager_emp_id[0]
-
+def approveRequestByAdmin(request_id):
         request = Request.query.filter_by(id=request_id, status=1).first()
-        user = User.query.filter_by(manager_emp_id=manager_emp_id, emp_id=request.user_emp_id).first()
-
-        if request and user:
+        if request:
             request.status = 0
             request.approved_time = datetime.utcnow()
-
             db.session.commit()
 
             if request.request_type == "absence":
@@ -84,8 +82,6 @@ def approveRequestByManager(api_key, request_id):
 
             db.session.commit()
             return True
-
-    return False
 
 def date_range(start_date, end_date):
     current_date = start_date

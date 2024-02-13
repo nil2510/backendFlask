@@ -1,22 +1,4 @@
 import datetime
-from app.models.present import Present
-from app import db
-
-def check_in(user_id):
-    new_attendance = Present(user_id=user_id)
-    db.session.add(new_attendance)
-    db.session.commit()
-    return new_attendance
-
-def check_out(attendance_id):
-    attendance = Present.query.get(attendance_id)
-    if attendance:
-        attendance.check_out = datetime.utcnow()
-        db.session.commit()
-        return attendance
-    return None
-
-import datetime
 import io
 from facenet_pytorch import MTCNN, InceptionResnetV1
 import torch
@@ -28,7 +10,28 @@ import cv2
 import time
 from torch.nn import CosineSimilarity
 import argparse
-# import pyttsx3
+import pyttsx3
+
+# def text_to_speech(text):
+#     # Initialize the text-to-speech engine
+#     engine = pyttsx3.init()
+
+#     # Set properties (optional)
+#     engine.setProperty('rate', 150)  # Speed of speech
+
+#     voices = engine.getProperty('voices')
+
+#     # Set the voice to a female voice (you can change the index to select a different voice)
+#     engine.setProperty('voice', voices[1].id)  # Assuming the female voice is at index 1
+
+
+#     # Convert the text to speech
+#     engine.say(text)
+
+#     # Wait for the speech to finish
+#     engine.runAndWait()
+
+
 
 # parser = argparse.ArgumentParser(description="Recognize faces in real time")
 # parser.add_argument("--train_in_batches", action="store_true", help="Train on input data in batches")
@@ -106,7 +109,7 @@ def train_in_batches(image_folder_path='C:/Users/SahithReddy/Desktop/pytorch-fac
 
 
 
-def face_match(img_path, data_path):
+def face_match(img_path, data_path): # img_path= location of photo, data_path= location of data.pt
    # getting embedding matrix of the given img
    img = Image.open(img_path)
    # img = Image.open('path_to_image.jpg')
@@ -478,6 +481,5 @@ def display_camera_fullscreen():
 # real_time_face_detection()
 # face_match('C:/Users/SahithReddy/Desktop/python/src/assets/captured_image.jpg','C:/Users/SahithReddy/Desktop/python/data.pt')
 # delete_embeddings()
-
 
 
