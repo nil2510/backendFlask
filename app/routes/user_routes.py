@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from app.services.auth_service import authorize, authorizeAdmin
+from app.services.facereco_service import deleteFace, trainFace
 from app.services.user_service import approveUserByAdmin, changePassword, createUser, deleteUserByAdmin, editUserByAdmin, getUnapprrovedUsersByAdmin, getUser, getUsersByAdmin, validateEmail, validateMobile, validateUser
 
 bp = Blueprint('user_routes', __name__)
@@ -142,6 +143,7 @@ def handlerApproveUserByAdmin():
     emp_id = data.get('emp_id')
 
     success = approveUserByAdmin(emp_id)
+    trainFace()
     if success:
         return jsonify({'message': 'User approved successfully'}), 200
     else:
@@ -190,6 +192,7 @@ def handlerDeleteUserByAdmin():
     emp_id = data.get('emp_id')
 
     success = deleteUserByAdmin(emp_id)
+    deleteFace(emp_id)
     if success:
         return jsonify({'message': 'User deleted successfully'}), 200
     else:

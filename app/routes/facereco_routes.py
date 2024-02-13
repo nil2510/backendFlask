@@ -3,16 +3,16 @@ from flask import Blueprint, jsonify
 from app.models.guest import Guest
 from app.models.present import Present
 from app.models.user import User
-from app.services.facereco_service import check_in, check_out, face_match
+from app.services.facereco_service import recogniseFace
 from app import db
 
 bp = Blueprint('presence_routes', __name__)
 
 @bp.route('/recognise', methods=['POST'])
-def check_in():
-    employee_id =  face_match('C:/Users/SunilPradhan/Desktop/Airport AMS/images/captured_image/captured_image.jpg','C:/Users/SunilPradhan/Desktop/Airport AMS/backendFlask/data.pt')
+def recognise():
+    employee_id =  recogniseFace()
     if employee_id == 'Unknown':
-      return jsonify({'message':'Employee not found', 'emp_id': 'unknown'})
+      return jsonify({'error':'Employee not found'})
     
     user = User.query.filter_by(emp_id = employee_id).first()
     if user:
@@ -31,7 +31,6 @@ def check_in():
             db.session.add(present)
             db.session.commit()
             return jsonify({'message':'Your attendance has been marked', 'name': user.name})
-
 
     guest = Guest.query.filter_by(id = employee_id).first()
     if guest:

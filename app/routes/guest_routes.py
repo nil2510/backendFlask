@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app.services.auth_service import authorizeAdmin
+from app.services.facereco_service import deleteFace, trainFace
 from app.services.guest_services import createGuest, deleteGuest, editGuest, getGuest, getGuests
 
 bp = Blueprint('guest_routes', __name__)
@@ -23,7 +24,8 @@ def handlerCreateGuest():
     email = data['email']
     company = data['company']
 
-    success = createGuest(planned_from, planned_to, name, email, company)
+    id, success = createGuest(planned_from, planned_to, name, email, company)
+    trainFace(id)
     if success:
         return jsonify({'message': 'Guest registered successfully'}), 201
     else :
@@ -125,6 +127,7 @@ def handlerDeleteGuest():
     id = data.get('id')
 
     success = deleteGuest(id)
+    deleteFace(id)
     if success:
         return jsonify({'message': 'Guest deleted successfully'}), 200
     else:
