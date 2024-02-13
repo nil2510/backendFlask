@@ -14,7 +14,7 @@ def authorizeAdmin(api_key):
     else:
         return None
     
-def checkEmail(email):
+def googleEmail(email):
     user = User.query.filter_by(email=email, status=0).first()
     if user:
         return user.api_key

@@ -49,7 +49,7 @@ def createUser(emp_id, name, email, position, mobile, password, manager_name, us
     return user
 
 
-def validateUser(email, password):
+def checkUser(email, password):
     user = User.query.filter_by(email=email, password=password, status=0).first()
     if user:
         return user

@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from app.services.auth_service import authorize, authorizeAdmin
 from app.services.facereco_service import deleteFace, trainFace
-from app.services.user_service import approveUserByAdmin, changePassword, createUser, deleteUserByAdmin, editUserByAdmin, getUnapprrovedUsersByAdmin, getUser, getUsersByAdmin, validateEmail, validateMobile, validateUser
+from app.services.user_service import approveUserByAdmin, changePassword, createUser, deleteUserByAdmin, editUserByAdmin, getUnapprrovedUsersByAdmin, getUser, getUsersByAdmin, validateEmail, validateMobile, checkUser
 
 bp = Blueprint('user_routes', __name__)
 
@@ -42,7 +42,7 @@ def login():
     email = data['email']
     password = data['password']
     
-    api_key = validateUser(email, password)
+    api_key = checkUser(email, password)
     if api_key == None:
         return jsonify({'error': 'invalid credentials'}), 200
     return jsonify({'api_key': api_key}), 200
