@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin
 from app.services.auth_service import authorize, authorizeAdmin
 from app.services.attendance_service import getAttendance
 
 bp = Blueprint('attendance_routes', __name__)
 
 @bp.route('/my-attendance', methods=['GET'])
+@cross_origin()
 def handlerMyAttendance():
     api_key = request.headers.get('Authorization')
     if api_key is None:
@@ -12,11 +14,12 @@ def handlerMyAttendance():
     emp_id = authorize(api_key)
     if emp_id is None:
         return jsonify({'error': 'you are not registered'}), 400
+
+    return jsonify(getAttendance(emp_id))
+
     
-    getAttendance(emp_id)
-    
-    return
 @bp.route('/attendance', methods=['GET'])
+@cross_origin()
 def handlerAttendance():
     api_key = request.headers.get('Authorization')
     if api_key is None:
@@ -30,6 +33,4 @@ def handlerAttendance():
         return jsonify({'error': 'incomplete data'}), 200
     emp_id = data.get('emp_id')
 
-    getAttendance(emp_id)
-    
-    return
+    return jsonify(getAttendance(emp_id))

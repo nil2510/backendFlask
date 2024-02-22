@@ -27,7 +27,7 @@ def register():
     
     success = validateMobile(mobile)
     if success:
-        return jsonify({'error': 'mobile is already registered'}), 200
+        return jsonify({'error': 'mobile is already registered or invalid mobile number'}), 200
 
     user = createUser(emp_id, name, email, position, mobile, password, manager_name, user_type)
 
@@ -97,7 +97,7 @@ def handlerGetUsersByAdmin():
 
         return jsonify(user_details_list)
     else:
-        return jsonify({'error': 'No users found for the given manager'}), 404
+        return jsonify({'error': 'No users found'}), 404
     
 
 @bp.route('/pending-users', methods=['GET'])
@@ -125,7 +125,7 @@ def handlerGetPendingUsersByAdmin():
             pending_users_list.append(user_details)
         return jsonify(pending_users_list)
     else:
-        return jsonify({'error': 'No pending users found for the given manager'}), 404
+        return jsonify({'error': 'No pending users found'}), 404
 
 @bp.route('/approve-user', methods=['POST'])
 @cross_origin()
@@ -143,7 +143,7 @@ def handlerApproveUserByAdmin():
     emp_id = data.get('emp_id')
 
     success = approveUserByAdmin(emp_id)
-    trainFace()
+    trainFace("E0009744")
     if success:
         return jsonify({'message': 'User approved successfully'}), 200
     else:

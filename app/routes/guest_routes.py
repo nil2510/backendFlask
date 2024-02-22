@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from flask_cors import cross_origin
 from app.services.auth_service import authorizeAdmin
 from app.services.facereco_service import deleteFace, trainFace
 from app.services.guest_services import createGuest, deleteGuest, editGuest, getGuest, getGuests
@@ -6,6 +7,7 @@ from app.services.guest_services import createGuest, deleteGuest, editGuest, get
 bp = Blueprint('guest_routes', __name__)
 
 @bp.route('/create-guest', methods=['POST'])
+@cross_origin()
 def handlerCreateGuest():
     api_key = request.headers.get('Authorization')
     if api_key is None:
@@ -15,11 +17,11 @@ def handlerCreateGuest():
         return jsonify({'error': 'you are not autherised'}), 400
 
     data = request.get_json()
-    if 'from' not in data or 'to' not in data or 'name' not in data or 'email' not in data or 'company' not in data:
+    if 'planned_from' not in data or 'planned_to' not in data or 'name' not in data or 'email' not in data or 'company' not in data:
         return jsonify({'error': 'incomplete data'}), 400
     
-    planned_from = data['from']
-    planned_to = data['to']
+    planned_from = data['planned_from']
+    planned_to = data['planned_to']
     name = data['name']
     email = data['email']
     company = data['company']
@@ -34,6 +36,7 @@ def handlerCreateGuest():
 
 
 @bp.route('/guest', methods=['GET'])
+@cross_origin()
 def handlerGuest():
     api_key = request.headers.get('Authorization')
     if api_key is None:
@@ -63,6 +66,7 @@ def handlerGuest():
     
 
 @bp.route('/guests', methods=['GET'])
+@cross_origin()
 def handlerGuests():
     api_key = request.headers.get('Authorization')
     if api_key is None:
@@ -91,6 +95,7 @@ def handlerGuests():
 
 
 @bp.route('/edit-guest', methods=['PUT'])
+@cross_origin()
 def handlerEditGuest():
     api_key = request.headers.get('Authorization')
     if api_key is None:
@@ -115,6 +120,7 @@ def handlerEditGuest():
 
 
 @bp.route('/delete-guest', methods=['DELETE'])
+@cross_origin()
 def handlerDeleteGuest():
     api_key = request.headers.get('Authorization')
     if api_key is None:

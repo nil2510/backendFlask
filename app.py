@@ -1,12 +1,7 @@
 from datetime import datetime
 from flask.cli import FlaskGroup
 from app import create_app, db
-# from dotenv import load_dotenv
-# import os
 from app.models.holiday import Holiday
-
-# load_dotenv()
-# google_client_secret = os.getenv('google_client_secret')
 
 app = create_app
 cli = FlaskGroup(app)
@@ -38,5 +33,4 @@ def create_db():
         db.session.commit()
 
 if __name__ == '__main__':
-    # app.secret_key = google_client_secret
     cli()

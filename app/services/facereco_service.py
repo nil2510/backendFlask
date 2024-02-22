@@ -7,64 +7,28 @@ from PIL import Image, ImageDraw
 import cv2
 import time
 from torch.nn import CosineSimilarity
-
+from dotenv import load_dotenv
 
 
 import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument("--train", action="store_true")
-parser.add_argument("--recognize", action="store_true")
-parser.add_argument("--delete", action="store_true")
-args = parser.parse_args()
-
-import pyttsx3
-def text_to_speech(text):
-    engine = pyttsx3.init()
-    engine.setProperty('rate', 150)
-    voices = engine.getProperty('voices')
-    engine.setProperty('voice', voices[1].id)
-    engine.say(text)
-    engine.runAndWait()
+# parser = argparse.ArgumentParser()
+# parser.add_argument("--train", action="store_true")
+# parser.add_argument("--recognize", action="store_true")
+# parser.add_argument("--delete", action="store_true")
+# parser.add_argument("--print", action="store_true")
+# args = parser.parse_args()
 
 
-
+load_dotenv()
+IMAGE_SERVER_PATH = os.getenv('IMAGE_SERVER_PATH')
 
 workers = 0 if os.name == 'nt' else 4
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print('Running on device: {}'.format(device))
 
-
 mtcnn0 = MTCNN(image_size=240, margin=0, keep_all=False, min_face_size=40)
 mtcnn = MTCNN(image_size=240, margin=0, keep_all=True, min_face_size=40)
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
-
-
-
-
-
-# def deleteUserFace(emp_id):
-#     print("-------------------------------- user embedding deleted: ",emp_id)
-#     data = torch.load('data.pt')
-#     names_to_delete = [emp_id]
-#     delete_idx = []
-#     for i, name in enumerate(data[1]):
-#         if name in names_to_delete:
-#             delete_idx.append(i)
-#     for idx in reversed(delete_idx):
-#         del data[1][idx]
-#         del data[0][idx]
-#     torch.save(data, 'data.pt')
-
-def deleteFace(emp_id):
-    data = torch.load('data.pt')
-    try:
-        del data[0][data[1].index(emp_id)]
-        del data[1][data[1].index(emp_id)]
-        torch.save(data, 'data.pt')
-        print("-------------------------------- user embedding deleted: ", emp_id)
-    except ValueError:
-        print("-------------------------------- user not found: ", emp_id)
-
 
 
 def trainFace(emp_id):
@@ -76,7 +40,7 @@ def trainFace(emp_id):
         embedding_list = []
         names_list = []
 
-    dataset = datasets.ImageFolder('C:/Users/SunilPradhan/Desktop/Airport AMS/images/users')
+    dataset = datasets.ImageFolder(IMAGE_SERVER_PATH + '/users')
     dataset.idx_to_class = {i:c for c, i in dataset.class_to_idx.items()}
     loader = DataLoader(dataset, collate_fn=collate_fn, num_workers=0)
     
@@ -95,9 +59,8 @@ def collate_fn(x):
     return x[0]
 
 
-
 def recogniseFace():
-   img = Image.open('C:/Users/SunilPradhan/Desktop/Airport AMS/images/captured_image/captured_image.jpg')
+   img = Image.open(IMAGE_SERVER_PATH + '/captured_image/captured_image.jpg')
    boxes, _ = mtcnn.detect(img)
    if boxes is not None:
        for box in boxes:
@@ -106,14 +69,12 @@ def recogniseFace():
    face, prob = mtcnn(img, return_prob=True)
    emb = resnet(face[0].unsqueeze(0)).detach()
 
-
-   saved_data = torch.load('data.pt')
+   saved_data = torch.load('C:/Users/SunilPradhan/Desktop/Airport AMS/backendFlask/app/services/data.pt')
    embedding_list = saved_data[0]
    name_list = saved_data[1]
    dist_list = []
    cos = CosineSimilarity(dim=1)
    cos_sim_list = []
-
 
    for idx, emb_db in enumerate(embedding_list):
        dist = torch.dist(emb, emb_db).item()
@@ -122,18 +83,15 @@ def recogniseFace():
        cos_sim = cos_sim[ 0]
        cos_sim_list.append(cos_sim.item())
 
-
    min_dist = min(dist_list)
    min_dist_idx = dist_list.index(min_dist)
    name = name_list[min_dist_idx]
 
-
    max_cos_sim = max(cos_sim_list)
    max_idx = cos_sim_list.index(max_cos_sim)
    name = name_list[max_idx]
+   print("-------------------------------- face match percentage:",max_cos_sim, "with", name)
    if min_dist<0.90 and max_cos_sim > 0.60:
-       text = f"Hello {name}! Welcome to Astreya"
-       text_to_speech(text)
        print("-------------------------------- user is recognised as",name)
        return name
    else:
@@ -141,10 +99,46 @@ def recogniseFace():
        return 'Unknown'
 
 
-if __name__ == "__main__":
-    if args.train:
-        trainFace('E0009744')
-    if args.recognize:
-        recogniseFace()
-    if args.delete:
-        deleteFace('E0009744')
+def deleteFace(emp_id):
+    print("-------------------------------- user embedding deleted: ",emp_id)
+    data = torch.load('data.pt')
+    names_to_delete = [emp_id]
+    delete_idx = []
+    for i, name in enumerate(data[1]):
+        if name in names_to_delete:
+            delete_idx.append(i)
+    for idx in reversed(delete_idx):
+        del data[1][idx]
+        del data[0][idx]
+    torch.save(data, 'data.pt')
+
+# def deleteFace(emp_id):
+#     data = torch.load('data.pt')
+#     try:
+#         del data[0][data[1].index(emp_id)]
+#         del data[1][data[1].index(emp_id)]
+#         torch.save(data, 'data.pt')
+#         print("-------------------------------- user embedding deleted: ", emp_id)
+#     except ValueError:
+#         print("-------------------------------- user not found: ", emp_id)
+    
+
+def printFace():
+    encodings = torch.load('data.pt')
+    print("-------------------------------- current user embedding list: ",encodings[1])
+
+# def deleteFolder(emp_id):
+
+
+# def createFolder(emp_id):
+        
+
+# if __name__ == "__main__":
+#     if args.train:
+#         trainFace('E0009744')
+#     if args.recognize:
+#         recogniseFace()
+#     if args.delete:
+#         deleteFace('1')
+#     if args.print:
+#         printFace()

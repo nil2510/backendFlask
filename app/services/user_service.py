@@ -14,14 +14,16 @@ def generate_api_key():
 def validateEmail(email):
     user = User.query.filter(email == email).first()
     if user:
-        return True
-    return False
+        return False
+    return True
         
 def validateMobile(mobile):
+    if len(mobile) != 10:
+        return False
     user = User.query.filter(mobile == mobile).first()
     if user:
-        return True
-    return False
+        return False
+    return True
 
 def createUser(emp_id, name, email, position, mobile, password, manager_name, user_type):
     status = 1
@@ -37,7 +39,7 @@ def createUser(emp_id, name, email, position, mobile, password, manager_name, us
         name = name,
         position = position,
         mobile = mobile,
-        manager_emp_id = manager_name,
+        manager_name = manager_name,
         user_type = user_type,
         status = status,
         api_key = generate_api_key()
