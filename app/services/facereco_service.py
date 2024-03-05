@@ -4,13 +4,12 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 import os
 from PIL import Image, ImageDraw
-import cv2
-import time
+# import cv2
 from torch.nn import CosineSimilarity
 from dotenv import load_dotenv
 
 
-import argparse
+# import argparse
 # parser = argparse.ArgumentParser()
 # parser.add_argument("--train", action="store_true")
 # parser.add_argument("--recognize", action="store_true")
@@ -126,11 +125,6 @@ def deleteFace(emp_id):
 def printFace():
     encodings = torch.load('data.pt')
     print("-------------------------------- current user embedding list: ",encodings[1])
-
-# def deleteFolder(emp_id):
-
-
-# def createFolder(emp_id):
         
 
 # if __name__ == "__main__":

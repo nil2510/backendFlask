@@ -24,9 +24,9 @@ def is_valid_base64(data):
 def recognise():
     data = request.get_json()
     if 'image' not in data:
-        return jsonify({'message': 'Missing image data'}), 400
+        return jsonify({'message': 'Missing image data','name': "unknown"}), 400
     if not is_valid_base64(data['image']):
-        return jsonify({'message': 'Invalid image format'}), 400
+        return jsonify({'message': 'Invalid image format','name': "unknown"}), 400
 
     base64_string = data['image']
     with open(os.path.join(IMAGE_SERVER_PATH, "captured_image.jpg"), 'wb') as f:
@@ -34,7 +34,7 @@ def recognise():
 
     employee_id = recogniseFace()
     if employee_id == 'Unknown':
-        return jsonify({'message':'Employee not found!'})
+        return jsonify({'message':'Employee not found!','name': "unknown"})
     
     user = User.query.filter_by(emp_id = employee_id).first()
     if user:
@@ -65,4 +65,4 @@ def recognise():
             db.session.commit()
             return jsonify({'message':'Your exit time has been updated.','name': guest.name})
     
-    return jsonify({'message':'Employee not found'})
+    return jsonify({'message':'Employee not found','name': "unknown"})

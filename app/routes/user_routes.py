@@ -1,17 +1,30 @@
+import base64
+import os
+from dotenv import load_dotenv
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from app.services.auth_service import authorize, authorizeAdmin
 from app.services.facereco_service import deleteFace, trainFace
-from app.services.user_service import approveUserByAdmin, changePassword, createUser, deleteUserByAdmin, editUserByAdmin, getUnapprrovedUsersByAdmin, getUser, getUsersByAdmin, validateEmail, validateMobile, checkUser
+from app.services.user_service import approveUserByAdmin, changePassword, createUser, deleteUserByAdmin, editUserByAdmin, getUnapprrovedUsersByAdmin, getUser, getUsersByAdmin, checkUser
 
 bp = Blueprint('user_routes', __name__)
+
+load_dotenv()
+IMAGE_SERVER_PATH = os.getenv('IMAGE_SERVER_PATH') + "/users"
+os.makedirs(IMAGE_SERVER_PATH, exist_ok=True)
+
+def is_valid_base64(data):
+    return bool(data.startswith('data:image/') and ';base64,' in data)
 
 @bp.route('/register', methods=['POST'])
 @cross_origin()
 def register():
     data = request.get_json()
-    if 'emp_id' not in data or 'name' not in data or 'email' not in data or 'position' not in data or 'mobile' not in data or 'password' not in data or 'manager_name' not in data or 'user_type' not in data:
-        return jsonify({'error': 'incomplete data'}), 400
+    required_fields = ['emp_id', 'name', 'email', 'position', 'mobile', 'password', 'manager_name', 'user_type', 'image_data']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'error': f"Missing required field: {field}"}), 400
+    
     emp_id = data['emp_id']
     email = data['email']
     password = data['password']
@@ -21,17 +34,19 @@ def register():
     manager_name = data['manager_name']
     user_type = data['user_type']
 
-    success = validateEmail(email)
-    if success:
-        return jsonify({'error': 'email is already registered'}), 200
-    
-    success = validateMobile(mobile)
-    if success:
-        return jsonify({'error': 'mobile is already registered or invalid mobile number'}), 200
+    EMP_IMAGE_SERVER_PATH = IMAGE_SERVER_PATH + "/" + emp_id
+    os.makedirs(EMP_IMAGE_SERVER_PATH, exist_ok=True)
+    IMAGE_NAME = emp_id + ".jpg"
 
-    user = createUser(emp_id, name, email, position, mobile, password, manager_name, user_type)
+    base64_string = data['image_data']
+    with open(os.path.join(EMP_IMAGE_SERVER_PATH, IMAGE_NAME), 'wb') as f:
+        f.write(base64.b64decode(base64_string.split(',')[1]))
 
-    return jsonify({'message': 'User registered successfully', 'api_key': user.api_key, "user_type":user.user_type}), 201
+    user, error = createUser(emp_id, name, email, position, mobile, password, manager_name, user_type)
+    if user:
+        return jsonify({'message': 'User registered successfully', 'api_key': user.api_key, "user_type":user.user_type}), 201
+    if error:
+        return jsonify({'error': f'{error}'}), 201
 
 @bp.route('/login', methods=['POST'])
 @cross_origin()
@@ -42,10 +57,11 @@ def login():
     email = data['email']
     password = data['password']
     
-    api_key = checkUser(email, password)
-    if api_key == None:
+    user = checkUser(email, password)
+    if user:
+        return jsonify({'api_key': user.api_key, "user_type": user.user_type}), 200
+    else:
         return jsonify({'error': 'invalid credentials'}), 200
-    return jsonify({'api_key': api_key}), 200
 
 @bp.route('/user', methods=['GET'])
 @cross_origin()
