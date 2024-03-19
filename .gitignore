@@ -1,0 +1,9 @@
+# .env
+# .gitignore
+app/services/data.pt
+
+__pycache__
+app/__pycache__
+app/models/__pycache__
+app/routes/__pycache__
+app/services/__pycache__

@@ -1,12 +1,14 @@
 from facenet_pytorch import MTCNN, InceptionResnetV1
 import torch
 from torch.utils.data import DataLoader
-from torchvision import datasets
+from torchvision import datasets, transforms
 import os
 from PIL import Image, ImageDraw
 # import cv2
 from torch.nn import CosineSimilarity
 from dotenv import load_dotenv
+import boto3
+import io
 
 
 # import argparse
@@ -18,17 +20,49 @@ from dotenv import load_dotenv
 # args = parser.parse_args()
 
 
+
+
+
+
+# s3 = boto3.resource('s3')
+# bucket = s3.Bucket('astreya-ams')
+
+# print([key.key for key in bucket.objects.all() if key.size])
+# load_path = "s3://astreya-ams/Embeddings/data.pt"
+# file_contents = []
+
+# s3client = boto3.client('s3', region_name='ap-south-2')
+
+# bucket_name = 'astreya-ams'
+# file_name = "Embeddings/data.pt"
+# s3.Bucket(bucket_name).download_file(file_name,'data.pt')
+
+
+
+
+
+
+
 load_dotenv()
 IMAGE_SERVER_PATH = os.getenv('IMAGE_SERVER_PATH')
 
 workers = 0 if os.name == 'nt' else 4
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-print('Running on device: {}'.format(device))
+# print('Running on device: {}'.format(device))
 
 mtcnn0 = MTCNN(image_size=240, margin=0, keep_all=False, min_face_size=40)
 mtcnn = MTCNN(image_size=240, margin=0, keep_all=True, min_face_size=40)
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 
+
+# def getEmbeddings():
+#     s3client = boto3.client('s3')
+#     bucket_name = 'astreya-ams'
+
+#     s3obj = s3client.get_object(Bucket=bucket_name, Key='Embeddings/data.pt')
+#     body = io.BytesIO(s3obj.get('Body').read())
+#     body.seek(0)
+#     return body
 
 def trainFace(emp_id):
     if os.path.exists('data.pt'):

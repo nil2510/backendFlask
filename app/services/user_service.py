@@ -16,9 +16,14 @@ def generate_api_key():
     return api_key
 
 def createUser(emp_id, name, email, position, mobile, password, manager_name, user_type):
+
+    if name == manager_name:
+        user_type = "admin"
+
     status = 1
     if user_type == "admin":
         status = 0
+        
     try:
         user = User(
             emp_id = emp_id,
